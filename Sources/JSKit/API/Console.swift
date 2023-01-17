@@ -13,25 +13,25 @@ import JavaScriptCore
     }
 
     public func log() {
-        let context = JSContext.current()
+        let context = JSContext.current()!
         let args = JSContext.currentArguments()!
         context.runtime.stdout(formatArguments(args))
     }
 
     public func info() {
-        let context = JSContext.current()
+        let context = JSContext.current()!
         let args = JSContext.currentArguments()!
         context.runtime.stdout(formatArguments(args))
     }
 
     public func warn() {
-        let context = JSContext.current()
+        let context = JSContext.current()!
         let args = JSContext.currentArguments()!
         context.runtime.stderr(formatArguments(args))
     }
 
     public func error() {
-        let context = JSContext.current()
+        let context = JSContext.current()!
         let args = JSContext.currentArguments()!
         context.runtime.stderr(formatArguments(args))
     }
