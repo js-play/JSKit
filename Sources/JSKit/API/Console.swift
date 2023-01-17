@@ -4,20 +4,36 @@ import JavaScriptCore
     func log()
     func info()
     func warn()
+    func error()
 }
 
 @objc public class Console: NSObject, ConsoleExports {
+    func formatArguments(_ args: [Any]) -> String {
+        return args.map { String("\($0)") }.joined(separator: " ")
+    }
+
     public func log() {
+        let context = JSContext.current()
         let args = JSContext.currentArguments()!
-        print(args.map { String("\($0)") }.joined(separator: " "))
+        context.runtime.stdout(formatArguments(args))
     }
 
     public func info() {
-        log()
+        let context = JSContext.current()
+        let args = JSContext.currentArguments()!
+        context.runtime.stdout(formatArguments(args))
     }
 
     public func warn() {
-        log()
+        let context = JSContext.current()
+        let args = JSContext.currentArguments()!
+        context.runtime.stderr(formatArguments(args))
+    }
+
+    public func error() {
+        let context = JSContext.current()
+        let args = JSContext.currentArguments()!
+        context.runtime.stderr(formatArguments(args))
     }
 }
 

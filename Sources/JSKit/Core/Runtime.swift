@@ -12,6 +12,8 @@ public class JSKitRuntime: NSObject {
     public var moduleLoader: JSKitModuleLoader
     public var globalContext: JSContext
     public var eventLoop: JSKitEventLoop
+    public var stdout: (String) -> Void = { print($0) }
+    public var stderr: (String) -> Void = { print($0) }
 
     public override init() {
         virtualMachine = JSVirtualMachine()
