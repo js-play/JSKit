@@ -1,19 +1,41 @@
 import JavaScriptCore
 import JavaScriptCoreExt
 
+let JSKitRuntimeKey = "__JSKitRuntime__"
+
 extension JSContext {
     public var runtime: JSKitRuntime {
-        return self.objectForKeyedSubscript("__JSKitRuntime__")!.toObject()! as! JSKitRuntime
+        return self.objectForKeyedSubscript(JSKitRuntimeKey)!.toObject()! as! JSKitRuntime
     }
 }
 
-public class JSKitRuntime: NSObject {
+enum JSKitError: Error {
+    case message(String)
+}
+
+@objc protocol JSKitRuntimeExports: JSExport {
+    func resolveModuleExports(_ exports: JSValue)
+    func rejectModuleExports(_ error: JSValue)
+}
+
+@objc public class JSKitRuntime: NSObject, JSKitRuntimeExports {
     public var virtualMachine: JSVirtualMachine
     public var moduleLoader: JSKitModuleLoader
     public var globalContext: JSContext
     public var eventLoop: JSKitEventLoop
+
+    public var exceptionHandler: (JSException) -> Void = { print($0.description) }
+    
     public var stdout: (String) -> Void = { print($0) }
     public var stderr: (String) -> Void = { print($0) }
+    
+    public var alert: (String) -> Void = { print($0) }
+    public var confirm: (String) -> Bool = { _ in false }
+    public var prompt: (String, String?) -> String? = { $1 }
+
+    public static var current: JSKitRuntime {
+        return JSContext.current()!.runtime
+    }
 
     public override init() {
         virtualMachine = JSVirtualMachine()
@@ -26,19 +48,19 @@ public class JSKitRuntime: NSObject {
         globalContext.moduleLoaderDelegate = moduleLoader
 
         globalContext.exceptionHandler = { context, exception in
-            let error = exception!
-            let message = error.toString()!
-            let stack = error.objectForKeyedSubscript("stack").toString()!
-            print("\(message)\n  at \(stack)")
+            if let exception = exception {
+                self.exceptionHandler(JSException(exception))
+            }
         }
 
-        globalContext.setObject(self, forKeyedSubscript: "__JSKitRuntime__" as NSString)
+        globalContext.setObject(self, forKeyedSubscript: JSKitRuntimeKey as NSString)
         
         initAPIs()
     }
 
     public func initAPIs() {
         initConsoleAPI(self)
+        initAlertsAPI(self)
         initTimersAPI(self)
         initPerformanceAPI(self)
     }
@@ -47,14 +69,44 @@ public class JSKitRuntime: NSObject {
         return globalContext.evaluateScript(script, withSourceURL: url)
     }
 
-    public func evaluateModule(_ url: URL) throws -> JSValue {
-        let script = try JSCExtScript(
-            of: .module,
-            withSource: "",
-            andSourceURL: url,
-            andBytecodeCache: nil,
-            in: virtualMachine
+    var moduleEvaluateCallback: ((JSValue?, JSValue?) -> Void)?
+
+    public func resolveModuleExports(_ exports: JSValue) {
+        if let callback = moduleEvaluateCallback {
+            moduleEvaluateCallback = nil
+            callback(exports, nil)
+        }
+    }
+
+    public func rejectModuleExports(_ error: JSValue) {
+        if let callback = moduleEvaluateCallback {
+            moduleEvaluateCallback = nil
+            exceptionHandler(JSException(error))
+            callback(nil, error)
+        }
+    }
+
+    public func evaluateModule(
+        _ url: URL,
+        _ completion: @escaping (JSValue?, JSValue?) -> Void
+    ) throws {
+        if moduleEvaluateCallback != nil {
+            throw JSKitError.message("Module evaluation is already in progress")
+        }
+        moduleEvaluateCallback = completion
+        globalContext.evaluateScript(
+            """
+            const module = import(`\(url.absoluteString)`);
+            module.then(
+                (exports) => {
+                    \(JSKitRuntimeKey).resolveModuleExports(exports);
+                },
+                (error) => {
+                    \(JSKitRuntimeKey).rejectModuleExports(error);
+                },
+            );
+            """,
+            withSourceURL: URL(string: "jskit:internal/module")
         )
-        return globalContext.evaluateJSScript(script)
     }
 }

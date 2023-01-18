@@ -16,7 +16,7 @@ let package = Package(
             targets: ["JSKit"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/js-play/JavaScriptCoreExt.git", branch: "main")
+        .package(url: "https://github.com/js-play/JavaScriptCoreExt.git", revision: "1e6355e865c2fbbdcc6d96e0eb2419cee1fcded9")
     ],
     targets: [
         .target(

@@ -14,4 +14,8 @@ extension JSValue {
     func with(resolved value: Any) {
         self.call(withArguments: [value])
     }
+
+    func call() {
+        self.call(withArguments: [])
+    }
 }
