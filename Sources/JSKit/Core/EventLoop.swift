@@ -47,7 +47,6 @@ public class JSKitEventLoop {
                             resolve!.call(withArguments: [])  
                         })
                     } catch {
-                        // Task failed successfully! lol
                         reject!.with(rejection: "Task failed: \(error)")
                         throw error
                     }

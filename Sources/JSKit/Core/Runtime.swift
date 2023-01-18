@@ -48,7 +48,7 @@ public class JSKitRuntime: NSObject {
     }
 
     public func evaluateModule(_ url: URL) throws -> JSValue {
-        let script = try JSScript(
+        let script = try JSCExtScript(
             of: .module,
             withSource: "",
             andSourceURL: url,
