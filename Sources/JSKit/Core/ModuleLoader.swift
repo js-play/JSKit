@@ -39,7 +39,6 @@ public class JSKitModuleLoader: NSObject, JSModuleLoaderDelegate {
                     of: .module,
                     withSource: source,
                     andSourceURL: file,
-                    andBytecodeCache: nil,
                     in: context.virtualMachine
                 )
             } catch {
