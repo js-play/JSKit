@@ -1,4 +1,5 @@
 import Foundation
+import JavaScriptCore
 import JavaScriptCoreExt
 
 public class JSKitModuleLoader: NSObject, JSModuleLoaderDelegate {
