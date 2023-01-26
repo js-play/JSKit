@@ -33,7 +33,7 @@ public class JSKitModuleLoader: NSObject, JSModuleLoaderDelegate {
                 return completion()
             }
 
-            let script: JSCExtScript
+            let script: Any
             do {
                 script = try JSCExtScript(
                     of: .module,
