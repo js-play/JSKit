@@ -39,7 +39,7 @@ public extension JSKitModuleLoaderDelegate {
 }
 
 public class JSKitModuleLoader: NSObject, JSModuleLoaderDelegate {
-    var delegate: JSKitModuleLoaderDelegate?
+    public var delegate: JSKitModuleLoaderDelegate?
     
     public func context(_ context: JSContext!, fetchModuleForIdentifier identifier: JSValue!, withResolveHandler resolve: JSValue!, andRejectHandler reject: JSValue!) {
         guard let identifier = identifier else {
