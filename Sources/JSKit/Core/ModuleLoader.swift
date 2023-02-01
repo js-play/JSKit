@@ -2,22 +2,26 @@ import Foundation
 import JavaScriptCore
 import JavaScriptCoreExt
 
+func makeModule(with source: String, url: URL, in: JSVirtualMachine) throws -> Any {
+    return try JSCExtScript(of: .module, withSource: source, andSourceURL: url, in: `in`)
+}
+
 public protocol JSKitModuleLoaderDelegate {
-    func moduleShouldHandled(name: String) -> Bool
-    func moduleWillImport(name: String, completion: @escaping (Result<Any, Error>) -> Void) -> Void
-    func moduleWillImport(name: String) async throws -> Any
-    func moduleDidImport(name: String, module: Any) -> Void
+    func moduleShouldHandled(name: String, vm: JSVirtualMachine) -> Bool
+    func moduleWillImport(name: String, vm: JSVirtualMachine, completion: @escaping (Result<Any, Error>) -> Void) -> Void
+    func moduleWillImport(name: String, vm: JSVirtualMachine) async throws -> Any
+    func moduleDidImport(name: String, module: Any, vm: JSVirtualMachine) -> Void
 }
 
 public extension JSKitModuleLoaderDelegate {
-    func moduleShouldHandled(name: String) -> Bool {
+    func moduleShouldHandled(name: String, vm: JSVirtualMachine) -> Bool {
         return false
     }
     
-    func moduleWillImport(name: String, completion: @escaping (Result<Any, Error>) -> Void) -> Void {
+    func moduleWillImport(name: String, vm: JSVirtualMachine, completion: @escaping (Result<Any, Error>) -> Void) -> Void {
         Task {
             do {
-                let script = try await moduleWillImport(name: name)
+                let script = try await moduleWillImport(name: name, vm: vm)
                 completion(.success(script))
             } catch {
                 completion(.failure(error))
@@ -25,11 +29,11 @@ public extension JSKitModuleLoaderDelegate {
         }
     }
     
-    func moduleWillImport(name: String) async throws -> Any {
+    func moduleWillImport(name: String, vm: JSVirtualMachine) async throws -> Any {
         throw JSKitError.message("moduleShouldHandled returned true but moduleWillImport is not implemented")
     }
     
-    func moduleDidImport(name: String, module: Any) -> Void {
+    func moduleDidImport(name: String, module: Any, vm: JSVirtualMachine) -> Void {
         return
     }
 }
@@ -49,12 +53,12 @@ public class JSKitModuleLoader: NSObject, JSModuleLoaderDelegate {
         }
         
         context.runtime.eventLoop.perform { [weak self] completion in
-            if let delegate = self?.delegate, delegate.moduleShouldHandled(name: filePath) {
-                delegate.moduleWillImport(name: filePath) { result in
+            if let delegate = self?.delegate, delegate.moduleShouldHandled(name: filePath, vm: context.virtualMachine) {
+                delegate.moduleWillImport(name: filePath, vm: context.virtualMachine) { result in
                     switch result {
                     case .success(let success):
                         resolve.with(resolved: success)
-                        delegate.moduleDidImport(name: filePath, module: success)
+                        delegate.moduleDidImport(name: filePath, module: success, vm: context.virtualMachine)
                     case .failure(let failure):
                         reject.with(rejection: failure.localizedDescription)
                     }
