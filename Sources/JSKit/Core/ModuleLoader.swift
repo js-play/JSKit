@@ -1,4 +1,5 @@
 import Foundation
+import JavaScriptCore
 import JavaScriptCoreExt
 
 public protocol JSKitModuleLoaderDelegate {
@@ -80,13 +81,12 @@ public class JSKitModuleLoader: NSObject, JSModuleLoaderDelegate {
                 return completion()
             }
 
-            let script: JSCExtScript
+            let script: Any
             do {
                 script = try JSCExtScript(
                     of: .module,
                     withSource: source,
                     andSourceURL: file,
-                    andBytecodeCache: nil,
                     in: context.virtualMachine
                 )
             } catch {
