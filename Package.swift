@@ -13,7 +13,7 @@ let package = Package(
         // Products define the executables and libraries a package produces, and make them visible to other packages.
         .library(
             name: "JSKit",
-            targets: ["JSKit"]),
+            targets: ["JSKit"])
     ],
     dependencies: [
         .package(url: "https://github.com/js-play/JavaScriptCoreExt.git", revision: "1e6355e865c2fbbdcc6d96e0eb2419cee1fcded9")
