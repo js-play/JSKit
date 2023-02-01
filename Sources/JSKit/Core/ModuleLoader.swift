@@ -2,7 +2,7 @@ import Foundation
 import JavaScriptCore
 import JavaScriptCoreExt
 
-func makeModule(with source: String, url: URL, in: JSVirtualMachine) throws -> Any {
+public func makeModule(with source: String, url: URL, in: JSVirtualMachine) throws -> Any {
     return try JSCExtScript(of: .module, withSource: source, andSourceURL: url, in: `in`)
 }
 
